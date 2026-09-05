@@ -1,255 +1,542 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../../components/layout/AppShell';
-import { useStudentProfile } from '../../hooks/useStudentProfile';
-import { useProjects } from '../../hooks/useProjects';
-import { useRoadmap } from '../../hooks/useRoadmap';
-import { ScoreCard } from '../../components/scores/ScoreCard';
+import { useProjectDiscovery } from '../../hooks/useProjectDiscovery';
+import { ProjectDomain, DifficultyLevel } from '../../types/project';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Textarea } from '../../components/ui/Textarea';
 import { Badge } from '../../components/ui/Badge';
-import { ProgressBar } from '../../components/ui/ProgressBar';
-import { LoadingState } from '../../components/common/LoadingState';
-import { ErrorState } from '../../components/common/ErrorState';
+import { DocumentUploader } from '../../components/upload/DocumentUploader';
+import { VoiceInputModal } from '../../components/voice/VoiceInputModal';
 import {
   Sparkles,
-  Compass,
-  FileCode2,
-  Map,
-  Bot,
-  User,
+  Mic,
   ArrowRight,
-  Code2,
+  Check,
+  FileText,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
 } from 'lucide-react';
+import { cn } from '../../utils/cn';
+
+const ALL_DOMAINS: { label: ProjectDomain; iconName?: string }[] = [
+  { label: 'Artificial Intelligence' },
+  { label: 'Machine Learning' },
+  { label: 'Web Development' },
+  { label: 'Mobile Development' },
+  { label: 'Cybersecurity' },
+  { label: 'Data Science' },
+  { label: 'Computer Vision' },
+  { label: 'Cloud & DevOps' },
+  { label: 'IoT & Robotics' },
+  { label: 'Blockchain' },
+  { label: 'Healthcare & MedTech' },
+  { label: 'FinTech & Security' },
+  { label: 'EdTech & Learning' },
+  { label: 'Sustainability & IoT' },
+];
+
+const POPULAR_DOMAINS_COUNT = 8;
+
+const PREFERRED_TECH_OPTIONS = [
+  'React',
+  'TypeScript',
+  'Python',
+  'FastAPI',
+  'PyTorch',
+  'Node.js',
+  'PostgreSQL',
+  'Docker',
+  'Firebase',
+  'Next.js',
+];
+
+const RESOURCE_OPTIONS = ['Laptop only', 'GPU available', 'Cloud available', 'Hardware available'];
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { profile, loading: profileLoading, error: profileError } = useStudentProfile();
-  const { projects, loading: projectsLoading } = useProjects();
-  const { roadmap, loading: roadmapLoading } = useRoadmap('proj_medtech_01');
+  const {
+    input,
+    updateInput,
+    toggleDomain,
+    toggleResource,
+    togglePreferredTech,
+    generating,
+    progressPercent,
+    progressStageText,
+    generateProjects,
+  } = useProjectDiscovery();
 
-  if (profileLoading || projectsLoading || roadmapLoading) {
-    return (
-      <AppShell>
-        <LoadingState label="Loading Personalized Student Workspace..." />
-      </AppShell>
-    );
-  }
+  const [showAllDomains, setShowAllDomains] = useState(false);
+  const [voiceModalOpen, setVoiceModalOpen] = useState(false);
+  const [showResumeUpload, setShowResumeUpload] = useState(false);
 
-  if (profileError || !profile) {
-    return (
-      <AppShell>
-        <ErrorState message={profileError || 'Failed to load student context'} />
-      </AppShell>
-    );
-  }
+  const displayedDomains = showAllDomains ? ALL_DOMAINS : ALL_DOMAINS.slice(0, POPULAR_DOMAINS_COUNT);
 
-  const activeProject = projects.find((p) => p.id === profile.activeProjectId) || projects[0];
+  const handleGenerateClick = () => {
+    generateProjects(() => {
+      navigate('/discover');
+    });
+  };
 
   return (
-    <AppShell activeProjectTitle={activeProject?.title}>
-      <div className="space-y-8">
-        {/* Header Greeting & Primary Action */}
-        <div className="p-6 rounded-2xl bg-surface-900 border border-surface-700/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-4 h-4 text-cyan-400" />
-              <span className="text-xs font-mono text-cyan-400 font-semibold uppercase">
-                {profile.institution}
+    <AppShell>
+      <div className="space-y-10 max-w-5xl mx-auto pb-12">
+        {/* ==================================================
+            SECTION 1: AI-FIRST HERO
+            ================================================== */}
+        <section className="p-8 sm:p-10 rounded-3xl bg-surface-900 border border-surface-700/60 shadow-2xl relative overflow-hidden ai-gradient-border space-y-6">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-cyan-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              AI PROJECT MENTOR WORKSPACE
+            </span>
+          </div>
+
+          <div className="space-y-3 max-w-3xl">
+            <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+              Build something that{' '}
+              <span className="bg-gradient-to-r from-brand-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">
+                actually fits you.
               </span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
-              Good morning, {profile.fullName.split(' ')[0]} 👋
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
-              Let's turn your skills into something worth building.
+            <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+              Tell us what you're interested in, what you know, and what constraints you have. Your AI mentor
+              will turn that into realistic, innovative project ideas.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/profile')}
-              leftIcon={<User className="w-3.5 h-3.5 text-slate-400" />}
-            >
-              Update Profile
-            </Button>
-
-            <Button
-              variant="gradient"
-              size="md"
-              onClick={() => navigate('/discover')}
-              rightIcon={<ArrowRight className="w-4 h-4" />}
-            >
-              Start a Project
-            </Button>
-          </div>
-        </div>
-
-        {/* Student Context Card & Active Project Health Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Student Profile Context Card */}
-          <Card className="lg:col-span-1">
-            <CardHeader className="flex items-center justify-between">
-              <CardTitle className="text-sm font-mono uppercase flex items-center gap-2">
-                <User className="w-4 h-4 text-brand-400" />
-                <span>Student Context</span>
-              </CardTitle>
-              <Badge variant="brand" size="sm">
-                {profile.experienceLevel}
-              </Badge>
-            </CardHeader>
-            <CardContent className="space-y-4 text-xs">
-              <div>
-                <span className="text-[10px] uppercase font-mono text-slate-400 block mb-1">Degree & Major:</span>
-                <p className="font-semibold text-slate-200">{profile.degree}</p>
-                <p className="text-slate-400">{profile.major} (Class of {profile.graduationYear})</p>
-              </div>
-
-              <div>
-                <span className="text-[10px] uppercase font-mono text-slate-400 block mb-1 flex items-center gap-1">
-                  <Code2 className="w-3 h-3 text-cyan-400" /> Key Skills:
-                </span>
-                <div className="flex flex-wrap gap-1">
-                  {profile.skills.slice(0, 5).map((skill) => (
-                    <span
-                      key={skill.id}
-                      className="text-[10px] px-2 py-0.5 rounded bg-surface-950 text-slate-300 border border-surface-700/50 font-mono"
-                    >
-                      {skill.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <span className="text-[10px] uppercase font-mono text-slate-400 block mb-1">
-                  Target Duration & Hardware:
-                </span>
-                <p className="font-semibold text-slate-200">
-                  {profile.targetDurationWeeks} Weeks ({profile.weeklyHours}h/week) • {profile.teamSize.toUpperCase()}
-                </p>
-                <p className="text-slate-400 truncate">{profile.hardwareConstraints[0]}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Active Project Health Breakdown */}
-          {activeProject && (
-            <div className="lg:col-span-2 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-100 uppercase font-mono flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-cyan-400" />
-                  <span>Active Project Health Evaluation</span>
-                </h3>
+          {/* Large Hero Interactive Prompt Input */}
+          <div className="pt-2">
+            <div className="relative flex items-center">
+              <Input
+                value={input.heroPromptText}
+                onChange={(e) => updateInput({ heroPromptText: e.target.value })}
+                placeholder="What do you want to build? (e.g. I want to build an innovative AI project for healthcare...)"
+                className="py-3.5 pl-4 pr-32 text-sm sm:text-base bg-surface-950/80 border-surface-700 focus:border-brand-500 rounded-xl shadow-inner"
+              />
+              <div className="absolute right-2 flex items-center gap-1.5">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  onClick={() => navigate(`/projects/${activeProject.id}`)}
-                  rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+                  onClick={() => setVoiceModalOpen(true)}
+                  leftIcon={<Mic className="w-3.5 h-3.5 text-brand-400" />}
+                  className="text-xs py-1.5 px-2.5 bg-surface-900 border-surface-700 hover:bg-surface-800"
                 >
-                  View Details
+                  <span className="hidden xs:inline">Speak instead</span>
                 </Button>
               </div>
-
-              <ScoreCard scores={activeProject.scores} />
             </div>
-          )}
-        </div>
+          </div>
+        </section>
 
-        {/* Workspace Action Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card variant="interactive" onClick={() => navigate('/discover')}>
-            <CardContent className="p-5 space-y-2">
-              <div className="w-9 h-9 rounded-lg bg-cyan-500/15 text-cyan-400 flex items-center justify-center">
-                <Compass className="w-5 h-5" />
-              </div>
-              <h4 className="text-sm font-bold text-slate-100">Discover Ideas</h4>
-              <p className="text-xs text-slate-400 line-clamp-2">
-                Filter personalized AI project concepts matching your skills.
+        {/* ==================================================
+            SECTION 2: DOMAIN SELECTION
+            ================================================== */}
+        <section className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                <span>What are you interested in?</span>
+                {input.domains.length > 0 && (
+                  <Badge variant="cyan" size="sm">
+                    {input.domains.length} selected
+                  </Badge>
+                )}
+              </h2>
+              <p className="text-xs text-slate-400">Choose one or more domains to guide your recommendations.</p>
+            </div>
+
+            <button
+              onClick={() => setShowAllDomains((prev) => !prev)}
+              className="text-xs font-mono text-brand-400 hover:text-brand-300 flex items-center gap-1 self-start sm:self-auto focus-ring rounded"
+            >
+              <span>{showAllDomains ? 'Show less domains' : 'Explore all domains'}</span>
+              {showAllDomains ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+
+          {/* Multi-Select Domain Chips Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+            {displayedDomains.map((d) => {
+              const isSelected = input.domains.includes(d.label);
+              return (
+                <button
+                  key={d.label}
+                  type="button"
+                  onClick={() => toggleDomain(d.label)}
+                  aria-pressed={isSelected}
+                  className={cn(
+                    'p-3 rounded-xl border text-left text-xs font-medium transition-all duration-150 flex items-center justify-between gap-2 focus-ring select-none',
+                    isSelected
+                      ? 'bg-brand-600/20 text-brand-200 border-brand-500 shadow-md font-semibold'
+                      : 'bg-surface-900 text-slate-300 border-surface-700/60 hover:border-slate-500 hover:bg-surface-800'
+                  )}
+                >
+                  <span className="truncate">{d.label}</span>
+                  {isSelected ? (
+                    <span className="w-4 h-4 rounded-full bg-brand-500 text-white flex items-center justify-center shrink-0">
+                      <Check className="w-2.5 h-2.5" />
+                    </span>
+                  ) : (
+                    <span className="w-4 h-4 rounded-full border border-slate-600 shrink-0" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ==================================================
+            SECTION 3: PROJECT INTENT
+            ================================================== */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-slate-100">Tell your AI mentor what you're thinking</h2>
+              <p className="text-xs text-slate-400">
+                Describe the kind of project you want to build, the problem you care about, or simply what you're curious about.
               </p>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card variant="interactive" onClick={() => navigate('/blueprint')}>
-            <CardContent className="p-5 space-y-2">
-              <div className="w-9 h-9 rounded-lg bg-brand-500/15 text-brand-400 flex items-center justify-center">
-                <FileCode2 className="w-5 h-5" />
-              </div>
-              <h4 className="text-sm font-bold text-slate-100">Engineering Blueprint</h4>
-              <p className="text-xs text-slate-400 line-clamp-2">
-                Inspect architecture diagrams, DB schemas, and API specs.
-              </p>
-            </CardContent>
-          </Card>
+            {input.intentText && (
+              <button
+                onClick={() => updateInput({ intentText: '' })}
+                className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1 focus-ring rounded"
+              >
+                <X className="w-3.5 h-3.5" /> Clear
+              </button>
+            )}
+          </div>
 
-          <Card variant="interactive" onClick={() => navigate('/roadmap')}>
-            <CardContent className="p-5 space-y-2">
-              <div className="w-9 h-9 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
-                <Map className="w-5 h-5" />
-              </div>
-              <h4 className="text-sm font-bold text-slate-100">Interactive Roadmap</h4>
-              <p className="text-xs text-slate-400 line-clamp-2">
-                Track milestone phases, tasks, deliverables, and dependencies.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="relative">
+            <Textarea
+              value={input.intentText}
+              onChange={(e) => updateInput({ intentText: e.target.value })}
+              rows={4}
+              placeholder="e.g. I want to use AI to solve a healthcare problem. I know Python and React but don't know much about computer vision..."
+              className="text-xs sm:text-sm bg-surface-900 border-surface-700 p-4"
+            />
 
-          <Card variant="interactive" onClick={() => navigate('/mentor')}>
-            <CardContent className="p-5 space-y-2">
-              <div className="w-9 h-9 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center">
-                <Bot className="w-5 h-5" />
-              </div>
-              <h4 className="text-sm font-bold text-slate-100">Context AI Mentor</h4>
-              <p className="text-xs text-slate-400 line-clamp-2">
-                Ask engineering questions with pinned project context.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Roadmap Snapshot Widget */}
-        {roadmap && (
-          <Card>
-            <CardHeader className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Map className="w-4 h-4 text-emerald-400" />
-                <CardTitle className="text-sm font-mono uppercase">Roadmap Progress Snapshot</CardTitle>
-              </div>
+            <div className="absolute bottom-3 right-3 flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/roadmap')}
-                rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+                onClick={() => setVoiceModalOpen(true)}
+                leftIcon={<Mic className="w-3.5 h-3.5 text-brand-400" />}
+                className="text-[11px] text-slate-400 hover:text-slate-200 bg-surface-950/60"
               >
-                Go to Roadmap
+                Voice Input
               </Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ProgressBar
-                value={roadmap.overallProgressPercentage}
-                showValueLabel
-                label={`${roadmap.projectTitle} - Progress`}
-                variant="emerald"
-              />
+            </div>
+          </div>
+        </section>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
-                {roadmap.phases.slice(0, 3).map((phase) => (
-                  <div key={phase.id} className="p-3 rounded-lg bg-surface-950/60 border border-surface-700/40 text-xs">
-                    <span className="text-[10px] font-mono text-slate-400 uppercase font-bold block">
-                      Phase 0{phase.phaseNumber}
-                    </span>
-                    <p className="font-semibold text-slate-100 truncate mt-0.5">{phase.name}</p>
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      {phase.milestones.length} Milestones
-                    </p>
-                  </div>
-                ))}
+        {/* ==================================================
+            SECTION 4: PROJECT PREFERENCES
+            ================================================== */}
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-lg font-bold text-slate-100">Project Preferences & Constraints</h2>
+            <p className="text-xs text-slate-400">Configure parameters to ensure recommendations match your timeline and capacity.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Experience Level */}
+            <Card className="bg-surface-900">
+              <CardContent className="p-4 space-y-2">
+                <span className="text-xs font-semibold text-slate-200 block">Experience Level:</span>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['beginner', 'intermediate', 'advanced'] as const).map((lvl) => (
+                    <button
+                      key={lvl}
+                      type="button"
+                      onClick={() => updateInput({ experienceLevel: lvl })}
+                      className={cn(
+                        'py-2 px-3 text-xs capitalize font-medium rounded-lg border transition-all text-center focus-ring select-none',
+                        input.experienceLevel === lvl
+                          ? 'bg-brand-600/20 text-brand-300 border-brand-500 font-semibold'
+                          : 'bg-surface-950 text-slate-400 border-surface-700/60 hover:bg-surface-800'
+                      )}
+                    >
+                      {lvl}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Target Duration */}
+            <Card className="bg-surface-900">
+              <CardContent className="p-4 space-y-2">
+                <span className="text-xs font-semibold text-slate-200 block">Project Duration:</span>
+                <div className="grid grid-cols-4 gap-2">
+                  {[1, 2, 3, 6].map((months) => (
+                    <button
+                      key={months}
+                      type="button"
+                      onClick={() => updateInput({ durationMonths: months })}
+                      className={cn(
+                        'py-2 px-2 text-xs font-mono font-medium rounded-lg border transition-all text-center focus-ring select-none',
+                        input.durationMonths === months
+                          ? 'bg-brand-600/20 text-brand-300 border-brand-500 font-semibold'
+                          : 'bg-surface-950 text-slate-400 border-surface-700/60 hover:bg-surface-800'
+                      )}
+                    >
+                      {months} {months === 1 ? 'month' : 'mos'}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Team Size */}
+            <Card className="bg-surface-900">
+              <CardContent className="p-4 space-y-2">
+                <span className="text-xs font-semibold text-slate-200 block">Team Size:</span>
+                <div className="grid grid-cols-4 gap-2">
+                  {[1, 2, 3, 4].map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => updateInput({ teamSize: size })}
+                      className={cn(
+                        'py-2 px-2 text-xs font-mono font-medium rounded-lg border transition-all text-center focus-ring select-none',
+                        input.teamSize === size
+                          ? 'bg-brand-600/20 text-brand-300 border-brand-500 font-semibold'
+                          : 'bg-surface-950 text-slate-400 border-surface-700/60 hover:bg-surface-800'
+                      )}
+                    >
+                      {size === 1 ? 'Solo (1)' : size === 4 ? '4+ members' : `${size} members`}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Difficulty Target */}
+            <Card className="bg-surface-900">
+              <CardContent className="p-4 space-y-2">
+                <span className="text-xs font-semibold text-slate-200 block">Target Difficulty:</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {(['Beginner-Friendly', 'Moderate', 'Challenging', 'Advanced'] as DifficultyLevel[]).map((diff) => (
+                    <button
+                      key={diff}
+                      type="button"
+                      onClick={() => updateInput({ difficulty: diff })}
+                      className={cn(
+                        'py-2 px-1 text-[11px] font-medium rounded-lg border transition-all text-center focus-ring select-none truncate',
+                        input.difficulty === diff
+                          ? 'bg-brand-600/20 text-brand-300 border-brand-500 font-semibold'
+                          : 'bg-surface-950 text-slate-400 border-surface-700/60 hover:bg-surface-800'
+                      )}
+                    >
+                      {diff}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Resources & Tech Stack Chips */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Resources / Hardware */}
+            <Card className="bg-surface-900">
+              <CardContent className="p-4 space-y-2">
+                <span className="text-xs font-semibold text-slate-200 block">Available Resources:</span>
+                <div className="flex flex-wrap gap-2">
+                  {RESOURCE_OPTIONS.map((res) => {
+                    const isSelected = input.resources.includes(res);
+                    return (
+                      <button
+                        key={res}
+                        type="button"
+                        onClick={() => toggleResource(res)}
+                        className={cn(
+                          'px-2.5 py-1 text-xs rounded-lg border font-mono transition-colors focus-ring select-none',
+                          isSelected
+                            ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 font-semibold'
+                            : 'bg-surface-950 text-slate-400 border-surface-700/60 hover:bg-surface-800'
+                        )}
+                      >
+                        {res} {isSelected ? '✓' : ''}
+                      </button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Preferred Technologies */}
+            <Card className="bg-surface-900">
+              <CardContent className="p-4 space-y-2">
+                <span className="text-xs font-semibold text-slate-200 block">Preferred Technologies:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {PREFERRED_TECH_OPTIONS.map((tech) => {
+                    const isSelected = input.preferredTech.includes(tech);
+                    return (
+                      <button
+                        key={tech}
+                        type="button"
+                        onClick={() => togglePreferredTech(tech)}
+                        className={cn(
+                          'px-2 py-0.5 text-xs rounded-md border font-mono transition-colors focus-ring select-none',
+                          isSelected
+                            ? 'bg-brand-500/20 text-brand-300 border-brand-500/40 font-semibold'
+                            : 'bg-surface-950 text-slate-400 border-surface-700/60 hover:bg-surface-800'
+                        )}
+                      >
+                        {tech}
+                      </button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* ==================================================
+            SECTION 5: RESUME / PROFILE CONTEXT (OPTIONAL)
+            ================================================== */}
+        <section className="space-y-3">
+          <Card className="bg-surface-900 border border-surface-700/60">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <CardTitle className="text-base font-bold text-slate-100 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-brand-400" />
+                  <span>Give your AI more context (Optional)</span>
+                </CardTitle>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Upload your resume or project report so recommendations match your existing skills and experience.
+                </p>
               </div>
-            </CardContent>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowResumeUpload((prev) => !prev)}
+                >
+                  {showResumeUpload ? 'Close Uploader' : 'Upload Resume / Document'}
+                </Button>
+              </div>
+            </CardHeader>
+
+            {showResumeUpload && (
+              <CardContent className="pt-2 border-t border-surface-700/40 space-y-3">
+                <DocumentUploader
+                  onDocumentUploaded={(doc) => {
+                    updateInput({
+                      resumeUploadedDocId: doc.id,
+                      resumeFileName: doc.fileName,
+                    });
+                  }}
+                />
+              </CardContent>
+            )}
           </Card>
-        )}
+        </section>
+
+        {/* ==================================================
+            SECTION 6: GENERATION SUMMARY ("YOUR PROJECT BRIEF")
+            ================================================== */}
+        <section className="p-5 rounded-2xl bg-surface-950/80 border border-brand-500/30 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-cyan-400" />
+              <h3 className="text-xs font-mono font-bold text-brand-300 uppercase">
+                YOUR PROJECT BRIEF SUMMARY
+              </h3>
+            </div>
+            <span className="text-[11px] font-mono text-slate-400">Updates live from form inputs</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="p-2.5 rounded-lg bg-surface-900 border border-surface-700/40">
+              <span className="text-[10px] font-mono text-slate-400 block mb-0.5">Target Domains:</span>
+              <p className="font-semibold text-slate-100 truncate">
+                {input.domains.length > 0 ? input.domains.join(', ') : 'All Domains'}
+              </p>
+            </div>
+
+            <div className="p-2.5 rounded-lg bg-surface-900 border border-surface-700/40">
+              <span className="text-[10px] font-mono text-slate-400 block mb-0.5">Scope Parameters:</span>
+              <p className="font-semibold text-slate-100">
+                {input.experienceLevel.toUpperCase()} • {input.durationMonths} Months • {input.teamSize} Member(s)
+              </p>
+            </div>
+
+            <div className="p-2.5 rounded-lg bg-surface-900 border border-surface-700/40">
+              <span className="text-[10px] font-mono text-slate-400 block mb-0.5">Hardware & Stack:</span>
+              <p className="font-semibold text-slate-100 truncate">
+                {input.resources.length > 0 ? input.resources.join(', ') : 'Standard'}
+              </p>
+            </div>
+
+            <div className="p-2.5 rounded-lg bg-surface-900 border border-surface-700/40">
+              <span className="text-[10px] font-mono text-slate-400 block mb-0.5">Resume Context:</span>
+              <p className="font-semibold text-emerald-400 truncate">
+                {input.resumeFileName ? `Attached (${input.resumeFileName})` : 'Not added (Optional)'}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ==================================================
+            SECTION 7: PRIMARY CTA & AI GENERATION STATE
+            ================================================== */}
+        <section className="text-center space-y-4 pt-2">
+          {generating ? (
+            <div className="p-6 rounded-2xl bg-surface-900 border border-brand-500/40 max-w-xl mx-auto space-y-4 animate-in fade-in">
+              <div className="flex items-center justify-center gap-2 text-sm font-bold text-brand-300">
+                <Loader2 className="w-5 h-5 text-brand-400 animate-spin" />
+                <span>AI Engineering Pipeline In Progress</span>
+              </div>
+
+              <p className="text-xs font-mono text-cyan-300">{progressStageText}</p>
+
+              <div className="w-full bg-surface-950 rounded-full h-2 overflow-hidden border border-surface-700/50">
+                <div
+                  className="bg-gradient-to-r from-brand-500 to-cyan-400 h-full transition-all duration-300"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Button
+                variant="gradient"
+                size="lg"
+                onClick={handleGenerateClick}
+                rightIcon={<ArrowRight className="w-5 h-5" />}
+                className="px-10 py-4 text-base font-bold shadow-xl shadow-brand-500/20"
+              >
+                Generate My Projects →
+              </Button>
+              <p className="text-xs text-slate-400">
+                AI will analyze your preferences and create personalized project recommendations.
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* Voice Input Integration */}
+        <VoiceInputModal
+          isOpen={voiceModalOpen}
+          onClose={() => setVoiceModalOpen(false)}
+          onTranscriptReady={(transcript) => {
+            updateInput({
+              intentText: transcript.rawText,
+              heroPromptText: transcript.rawText,
+            });
+          }}
+        />
       </div>
     </AppShell>
   );

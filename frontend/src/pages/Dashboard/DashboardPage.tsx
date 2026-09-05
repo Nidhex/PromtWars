@@ -20,6 +20,8 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
+  AlertCircle,
+  RotateCcw,
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
@@ -68,6 +70,7 @@ export const DashboardPage: React.FC = () => {
     generating,
     progressPercent,
     progressStageText,
+    error,
     generateProjects,
   } = useProjectDiscovery();
 
@@ -492,6 +495,25 @@ export const DashboardPage: React.FC = () => {
             SECTION 7: PRIMARY CTA & AI GENERATION STATE
             ================================================== */}
         <section className="text-center space-y-4 pt-2">
+          {error && (
+            <div className="p-4 rounded-2xl bg-rose-950/80 border border-rose-500/50 max-w-xl mx-auto flex items-start gap-3 text-left animate-in fade-in">
+              <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+              <div className="space-y-2 flex-1">
+                <h4 className="text-xs font-bold text-rose-200">Unable to generate project ideas</h4>
+                <p className="text-xs text-rose-300/90 leading-relaxed">{error}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateClick}
+                  leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                  className="text-xs border-rose-500/40 text-rose-200 hover:bg-rose-900/40 mt-1"
+                >
+                  Try Again
+                </Button>
+              </div>
+            </div>
+          )}
+
           {generating ? (
             <div className="p-6 rounded-2xl bg-surface-900 border border-brand-500/40 max-w-xl mx-auto space-y-4 animate-in fade-in">
               <div className="flex items-center justify-center gap-2 text-sm font-bold text-brand-300">

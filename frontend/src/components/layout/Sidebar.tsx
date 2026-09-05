@@ -11,6 +11,7 @@ import {
   Sparkles,
   Layers,
   ChevronRight,
+  FileCheck,
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { StudentProfile } from '../../types/student';
@@ -31,6 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ profile, activeProjectTitle, c
     { label: 'Blueprint', path: '/blueprint', icon: FileCode2 },
     { label: 'Roadmap', path: '/roadmap', icon: Map },
     { label: 'AI Mentor', path: '/mentor', icon: Bot, badge: 'Context-Aware' },
+    { label: 'Resume ATS Check', path: '/resume-analyzer', icon: FileCheck, badge: 'ATS Check' },
   ];
 
   // Map route to lifecycle step

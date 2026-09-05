@@ -1,51 +1,44 @@
 import React, { useState } from 'react';
 import { AppShell } from '../../components/layout/AppShell';
 import { useMentor } from '../../hooks/useMentor';
-import { MentorPanel } from '../../components/mentor/MentorPanel';
+import { MentorChat } from '../../components/mentor/MentorChat';
 import { VoiceInputModal } from '../../components/voice/VoiceInputModal';
 import { LoadingState } from '../../components/common/LoadingState';
-import { ErrorState } from '../../components/common/ErrorState';
 
 export const MentorPage: React.FC = () => {
   const {
+    project,
+    blueprint,
     messages,
-    context,
     suggestedPrompts,
     loading,
     sending,
     error,
     sendMessage,
-    clearChat,
-    refreshMentor,
-  } = useMentor('proj_medtech_01');
+    retryLastMessage,
+  } = useMentor();
 
   const [voiceModalOpen, setVoiceModalOpen] = useState(false);
 
   if (loading) {
     return (
       <AppShell>
-        <LoadingState label="Connecting to AI Project Mentor..." />
-      </AppShell>
-    );
-  }
-
-  if (error) {
-    return (
-      <AppShell>
-        <ErrorState message={error} onRetry={refreshMentor} />
+        <LoadingState label="Loading AI Project Mentor context..." />
       </AppShell>
     );
   }
 
   return (
-    <AppShell activeProjectTitle={context?.projectTitle}>
-      <MentorPanel
+    <AppShell activeProjectTitle={project?.title}>
+      <MentorChat
+        project={project}
+        blueprint={blueprint}
         messages={messages}
-        context={context}
         suggestedPrompts={suggestedPrompts}
         sending={sending}
+        error={error}
         onSendMessage={sendMessage}
-        onClearChat={clearChat}
+        onRetry={retryLastMessage}
         onVoiceClick={() => setVoiceModalOpen(true)}
       />
 

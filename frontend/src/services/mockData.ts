@@ -803,7 +803,7 @@ export const mockSuggestedPrompts: SuggestedPrompt[] = [
     id: 'sp_4',
     label: 'Next Milestone Action',
     prompt: 'I am currently in Phase 2 on the ClinicalTrials.gov indexer. What is the most critical task I should tackle next?',
-    category: 'evaluation',
+    category: 'viva',
   },
 ];
 

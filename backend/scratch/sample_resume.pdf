@@ -1,0 +1,27 @@
+%PDF-1.4
+Aarav Sharma
+Email: aarav@example.com | Phone: +1-555-0199
+GitHub: github.com/aarav | LinkedIn: linkedin.com/in/aarav
+
+SUMMARY
+Full Stack & AI Engineer with 3+ years experience building web apps.
+
+TECHNICAL SKILLS
+Languages: Python, TypeScript, JavaScript, C++, SQL
+Frameworks: React, Node.js, Express, Next.js, TailwindCSS
+Databases: PostgreSQL, MongoDB, Redis
+Tools: Docker, Git, AWS, Linux
+
+WORK EXPERIENCE
+Software Engineer Intern | TechCorp Inc (Jun 2024 - Sep 2024)
+- Developed RESTful APIs processing 10,000 requests per day.
+- Reduced database query latency by 35% using PostgreSQL indexing.
+
+PROJECTS
+MedTrial AI: Patient Screener (React, Node.js, Gemini API)
+- Built an AI-driven clinical trial matching workspace.
+- Deployed on AWS ECS with Docker containerization.
+
+EDUCATION
+B.S. in Computer Science, Stanford University (2022 - 2026)
+GPA: 3.85 / 4.0

@@ -20,7 +20,7 @@ export const ProjectContextCard: React.FC<ProjectContextCardProps> = ({ context 
             </h4>
           </div>
           <Badge variant="cyan" size="sm" className="font-mono">
-            {context.progressPercentage}% COMPLETE
+            {context.overallFitScore ?? 85}/100 FIT
           </Badge>
         </div>
 
@@ -32,9 +32,9 @@ export const ProjectContextCard: React.FC<ProjectContextCardProps> = ({ context 
 
           <div className="p-2.5 rounded-lg bg-surface-950/60 border border-surface-700/40">
             <span className="text-[10px] font-mono text-slate-400 block mb-0.5 flex items-center gap-1">
-              <Map className="w-3 h-3 text-brand-400" /> Current Stage:
+              <Map className="w-3 h-3 text-brand-400" /> Architecture Pattern:
             </span>
-            <p className="font-semibold text-slate-200 truncate">{context.currentMilestoneTitle}</p>
+            <p className="font-semibold text-slate-200 truncate">{context.architecturePattern || 'Client-Server RAG'}</p>
           </div>
 
           <div className="p-2.5 rounded-lg bg-surface-950/60 border border-surface-700/40">

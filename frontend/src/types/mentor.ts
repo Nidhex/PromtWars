@@ -20,15 +20,26 @@ export interface SuggestedPrompt {
   id: string;
   label: string;
   prompt: string;
-  category: 'scope' | 'architecture' | 'ai_pipeline' | 'debugging' | 'evaluation';
+  category: 'scope' | 'architecture' | 'ai_pipeline' | 'viva' | 'feasibility';
 }
 
 export interface MentorContext {
   projectId: string;
   projectTitle: string;
-  currentPhaseName: string;
-  currentMilestoneTitle: string;
+  domain: string;
+  difficulty: string;
+  overallFitScore: number;
+  architecturePattern: string;
   techStackSummary: string;
+  timeline: string;
+  teamSize: number;
   activeRisksCount: number;
-  progressPercentage: number;
+}
+
+export interface MentorChatPayload {
+  project?: any;
+  blueprint?: any;
+  studentContext?: any;
+  messages?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  message: string;
 }

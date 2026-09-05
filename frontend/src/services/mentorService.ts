@@ -1,99 +1,97 @@
-import { MentorMessage, MentorContext, SuggestedPrompt } from '../types/mentor';
+import { MentorMessage, SuggestedPrompt, MentorChatPayload } from '../types/mentor';
 import { ServiceResponse } from '../types/common';
-import { mockMentorHistory, mockSuggestedPrompts } from './mockData';
 
-let messageHistory: MentorMessage[] = [...mockMentorHistory];
+const BACKEND_URL = (import.meta as any).env?.VITE_BACKEND_URL || 'http://localhost:3001';
+
+export const STARTER_SUGGESTIONS: SuggestedPrompt[] = [
+  {
+    id: 'sug_arch',
+    label: 'Explain Architecture',
+    prompt: 'Explain my project architecture and data flow.',
+    category: 'architecture',
+  },
+  {
+    id: 'sug_first',
+    label: 'What to build first?',
+    prompt: 'What feature should I build first to make quick progress?',
+    category: 'scope',
+  },
+  {
+    id: 'sug_feasibility',
+    label: 'Check Feasibility',
+    prompt: 'Check my project feasibility for a 3-month timeline.',
+    category: 'feasibility',
+  },
+  {
+    id: 'sug_scope',
+    label: 'Reduce Scope',
+    prompt: 'How can I simplify this project to reduce scope if needed?',
+    category: 'scope',
+  },
+  {
+    id: 'sug_viva',
+    label: 'Prepare for Viva',
+    prompt: 'Explain this project like I have an academic viva evaluation tomorrow.',
+    category: 'viva',
+  },
+  {
+    id: 'sug_ai',
+    label: 'AI & ML Pipeline',
+    prompt: 'Explain the AI/ML approach and how models are integrated.',
+    category: 'ai_pipeline',
+  },
+];
 
 export const mentorService = {
-  async getMessages(_projectId: string): Promise<ServiceResponse<MentorMessage[]>> {
-    await new Promise((resolve) => setTimeout(resolve, 150));
+  async getSuggestedPrompts(_projectId?: string): Promise<ServiceResponse<SuggestedPrompt[]>> {
     return {
       success: true,
-      data: [...messageHistory],
+      data: STARTER_SUGGESTIONS,
       timestamp: new Date().toISOString(),
     };
   },
 
-  async getContext(projectId: string): Promise<ServiceResponse<MentorContext>> {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const context: MentorContext = {
-      projectId,
-      projectTitle: 'MedTrial AI: Patient Eligibility & Risk Screener',
-      currentPhaseName: 'Phase 2: RAG & Vector Search Engine',
-      currentMilestoneTitle: 'Milestone 3: ClinicalTrials.gov Syncer & Vector Index',
-      techStackSummary: 'React · TypeScript · FastAPI · PostgreSQL · pgvector · Gemini API',
-      activeRisksCount: 2,
-      progressPercentage: 45,
-    };
-
-    return {
-      success: true,
-      data: context,
-      timestamp: new Date().toISOString(),
-    };
-  },
-
-  async getSuggestedPrompts(_projectId: string): Promise<ServiceResponse<SuggestedPrompt[]>> {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    return {
-      success: true,
-      data: [...mockSuggestedPrompts],
-      timestamp: new Date().toISOString(),
-    };
-  },
-
-  async sendMessage(
-    _projectId: string,
-    content: string
+  async sendMentorChatMessage(
+    payload: MentorChatPayload
   ): Promise<ServiceResponse<MentorMessage>> {
-    // 1. Add student message
-    const studentMsg: MentorMessage = {
-      id: `msg_stu_${Date.now()}`,
-      sender: 'student',
-      content,
-      timestamp: new Date().toISOString(),
-    };
-    messageHistory.push(studentMsg);
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/mentor/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
 
-    // 2. Simulate AI engineering analysis latency
-    await new Promise((resolve) => setTimeout(resolve, 800));
+      const json = await response.json();
 
-    // 3. Generate context-aware mentor response
-    let responseText = `I analyzed your question regarding the current project stage (**Phase 2: RAG & Vector Search Engine**).\n\nHere is the recommended engineering approach:\n\n1. **Boundary Isolation**: Ensure all vector transformations are abstracted behind a clean repository interface so swapping embedding models won't break your retrieval pipeline.\n2. **Confidence Calibration**: Apply a softmax temperature layer over cosine similarity scores to prevent low-similarity false matches from entering the LLM prompt.\n3. **Test Invariant**: Add a unit test verifying that contraindication assertions fail gracefully when similarity score is under 0.72.`;
+      if (!response.ok || !json.success) {
+        return {
+          success: false,
+          error: json.error || json.message || `Backend Error (${response.status}): ${response.statusText}`,
+          timestamp: new Date().toISOString(),
+        };
+      }
 
-    if (content.toLowerCase().includes('scope') || content.toLowerCase().includes('weeks')) {
-      responseText = `Looking at your **12-week timeline** and current progress (45%), your core scope is solid. \n\n**Advice:** Keep the FHIR standard parser as an optional *Phase 4 stretch goal*. Prioritize the deterministic inclusion/exclusion verification with Gemini 1.5 Pro first, as that is the core differentiator judges will look for.`;
-    } else if (content.toLowerCase().includes('database') || content.toLowerCase().includes('pgvector')) {
-      responseText = `For your architecture with under 100k trial criteria chunks, **PostgreSQL with the \`pgvector\` extension (HNSW index)** is optimal. You avoid paying for separate vector SaaS like Pinecone, maintain ACID relational transactions for patient audits, and simplify deployment to a single Google Cloud SQL instance.`;
+      const mentorReply: MentorMessage = {
+        id: `msg_mentor_${Date.now()}`,
+        sender: 'mentor',
+        content: json.data?.reply || 'No response returned from AI Mentor.',
+        timestamp: json.data?.timestamp || new Date().toISOString(),
+      };
+
+      return {
+        success: true,
+        data: mentorReply,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Network error communicating with backend API';
+      return {
+        success: false,
+        error: `Unable to connect to AI Mentor server (${BACKEND_URL}): ${msg}`,
+        timestamp: new Date().toISOString(),
+      };
     }
-
-    const mentorReply: MentorMessage = {
-      id: `msg_mentor_${Date.now()}`,
-      sender: 'mentor',
-      content: responseText,
-      timestamp: new Date().toISOString(),
-      suggestedNextActions: [
-        'Review database vector indexing schema in Blueprint',
-        'Mark task as in progress in Roadmap',
-      ],
-      referencedMilestoneId: 'ms_3',
-    };
-
-    messageHistory.push(mentorReply);
-
-    return {
-      success: true,
-      data: mentorReply,
-      timestamp: new Date().toISOString(),
-    };
-  },
-
-  async clearHistory(): Promise<ServiceResponse<boolean>> {
-    messageHistory = [mockMentorHistory[0]];
-    return {
-      success: true,
-      data: true,
-      timestamp: new Date().toISOString(),
-    };
   },
 };

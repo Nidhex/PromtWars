@@ -9,6 +9,7 @@ import { BlueprintPage } from './pages/Blueprint/BlueprintPage';
 import { RoadmapPage } from './pages/Roadmap/RoadmapPage';
 import { MentorPage } from './pages/Mentor/MentorPage';
 import { SettingsPage } from './pages/Settings/SettingsPage';
+import { ResumeAnalyzerPage } from './pages/Resume/ResumeAnalyzerPage';
 import { NotFoundPage } from './pages/NotFound/NotFoundPage';
 
 export const App: React.FC = () => {
@@ -23,6 +24,7 @@ export const App: React.FC = () => {
         <Route path="/blueprint" element={<BlueprintPage />} />
         <Route path="/roadmap" element={<RoadmapPage />} />
         <Route path="/mentor" element={<MentorPage />} />
+        <Route path="/resume-analyzer" element={<ResumeAnalyzerPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

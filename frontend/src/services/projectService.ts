@@ -5,6 +5,10 @@ import { mockProjectIdeas } from './mockData';
 let projectsStore: ProjectIdea[] = [...mockProjectIdeas];
 
 export const projectService = {
+  setProjects(projects: ProjectIdea[]): void {
+    projectsStore = projects;
+  },
+
   async getProjects(filters?: Partial<ProjectFilterState>): Promise<ServiceResponse<ProjectIdea[]>> {
     await new Promise((resolve) => setTimeout(resolve, 200));
 

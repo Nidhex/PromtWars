@@ -55,7 +55,13 @@ export const projectDiscoveryService = {
       const json = await response.json();
 
       if (!response.ok || !json.success) {
-        const errorMessage = json.error || json.message || `Backend Error (${response.status}): ${response.statusText}`;
+        const errorMessage =
+          typeof json.error === 'object' && json.error?.message
+            ? json.error.message
+            : typeof json.error === 'string'
+            ? json.error
+            : json.message || `Backend Error (${response.status}): ${response.statusText}`;
+
         return {
           success: false,
           error: errorMessage,

@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { calculateDeterministicOverallScore } from '../services/projectGenerationService.js';
+import { describe, it, expect, vi } from 'vitest';
+import { calculateDeterministicOverallScore, generatePersonalizedProjects } from '../services/projectGenerationService.js';
 import { projectDiscoverySchema } from '../schemas/projectDiscoverySchema.js';
+import { geminiService } from '../services/geminiService.js';
 
 describe('Project Generation Score Calculator', () => {
   it('calculates weighted overall fit score accurately', () => {
@@ -13,7 +14,6 @@ describe('Project Generation Score Calculator', () => {
       timeFeasibilityScore: 95,
     });
 
-    // 90*0.25 (22.5) + 80*0.20 (16) + 100*0.15 (15) + 85*0.20 (17) + 70*0.10 (7) + 95*0.10 (9.5) = 87
     expect(score).toBe(87);
   });
 
@@ -45,6 +45,7 @@ describe('Project Discovery Input Schema', () => {
     const payload = {
       domains: ['Web Development'],
       heroPromptText: 'Building AI tools for students',
+      intent: 'Building AI tools for students',
       experienceLevel: 'intermediate',
       duration: '3 months',
       teamSize: 1,
@@ -68,5 +69,106 @@ describe('Project Discovery Input Schema', () => {
     if (result.success) {
       expect(result.data.domains).toEqual(['Artificial Intelligence']);
     }
+  });
+});
+
+describe('Dynamic AI Context Passing & Gemini Failure Handling', () => {
+  it('TEST 1 & TEST 2: passes Machine Learning + Healthcare vs Cybersecurity contexts to Gemini', async () => {
+    const spy = vi.spyOn(geminiService, 'generateStructuredProjects').mockResolvedValue({
+      projects: [
+        {
+          id: 'proj_mock_1',
+          title: 'Mock Project Concept',
+          tagline: 'Mock Tagline',
+          domain: 'Cybersecurity',
+          difficulty: 'Moderate',
+          estimatedWeeks: 8,
+          problemStatement: 'Problem',
+          proposedSolution: 'Solution',
+          targetUsers: ['Users'],
+          keyFeatures: ['Feature 1'],
+          aiComponents: ['AI 1'],
+          techStack: {
+            frontend: ['React'],
+            backend: ['Node.js'],
+            aiMl: ['Python'],
+            database: ['PostgreSQL'],
+            cloudDeploy: ['Vercel'],
+          },
+          whyThisFitsYou: ['Fits background'],
+          feasibilityReasoning: 'Highly feasible',
+          innovationScore: 85,
+          feasibilityScore: 90,
+          skillMatchScore: 88,
+          interestMatchScore: 85,
+          technologyMatchScore: 90,
+          difficultyFitScore: 85,
+          timeFeasibilityScore: 90,
+          risks: [],
+          recommendations: [],
+          hardwareRequirements: ['Laptop'],
+          prerequisites: ['Basics'],
+        },
+      ],
+    });
+
+    const request1 = {
+      domains: ['Machine Learning', 'Healthcare & MedTech'],
+      heroPromptText: 'AI for early disease diagnosis',
+      intent: 'AI for early disease diagnosis',
+      experienceLevel: 'intermediate' as const,
+      duration: '3 months',
+      teamSize: 2,
+      difficulty: 'Moderate' as const,
+      resources: ['Laptop only'],
+      preferredTechnologies: ['PyTorch', 'Python'],
+      excludedTechnologies: [],
+    };
+
+    await generatePersonalizedProjects(request1);
+    expect(spy).toHaveBeenLastCalledWith(expect.stringContaining('Machine Learning, Healthcare & MedTech'));
+    expect(spy).toHaveBeenLastCalledWith(expect.stringContaining('PyTorch, Python'));
+
+    const request2 = {
+      domains: ['Cybersecurity'],
+      heroPromptText: 'Security monitoring system',
+      intent: 'Security monitoring system',
+      experienceLevel: 'beginner' as const,
+      duration: '1 month',
+      teamSize: 1,
+      difficulty: 'Beginner' as const,
+      resources: ['Laptop only'],
+      preferredTechnologies: ['Python'],
+      excludedTechnologies: ['PHP'],
+    };
+
+    await generatePersonalizedProjects(request2);
+    expect(spy).toHaveBeenLastCalledWith(expect.stringContaining('Cybersecurity'));
+    expect(spy).toHaveBeenLastCalledWith(expect.stringContaining('Security monitoring system'));
+    expect(spy).toHaveBeenLastCalledWith(expect.stringContaining('Technologies to Avoid: PHP'));
+
+    spy.mockRestore();
+  });
+
+  it('TEST 4 & 5: simulates Gemini failure and verifies error is thrown without returning static fallback projects', async () => {
+    const spy = vi.spyOn(geminiService, 'generateStructuredProjects').mockRejectedValue(
+      new Error('AI_GENERATION_FAILED: Gemini API call failed')
+    );
+
+    const req = {
+      domains: ['Cybersecurity'],
+      heroPromptText: 'Security scanner',
+      intent: 'Security scanner',
+      experienceLevel: 'intermediate' as const,
+      duration: '2 months',
+      teamSize: 1,
+      difficulty: 'Moderate' as const,
+      resources: ['Laptop only'],
+      preferredTechnologies: ['Python'],
+      excludedTechnologies: [],
+    };
+
+    await expect(generatePersonalizedProjects(req)).rejects.toThrow('AI_GENERATION_FAILED');
+    spy.mockRestore();
   });
 });

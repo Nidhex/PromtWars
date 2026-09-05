@@ -77,7 +77,7 @@ Provide a direct, context-aware response as their AI Project Mentor.`;
 
 export const mentorService = {
   async getChatResponse(input: MentorChatRequestInput): Promise<string> {
-    const model = env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const model = env.GEMINI_MODEL || 'gemini-3.6-flash';
     const { systemInstruction, userPrompt } = buildMentorPrompt(input);
 
     console.log(`[MentorChat] Received question for project: "${input.project.title}"`);

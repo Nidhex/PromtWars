@@ -45,7 +45,7 @@ async function getGeminiQualitativeAnalysis(
   resumeText: string,
   jobDescription?: string
 ): Promise<QualitativeResumeAnalysisSchema> {
-  const model = env.GEMINI_MODEL || 'gemini-1.5-flash';
+  const model = env.GEMINI_MODEL || 'gemini-3.6-flash';
 
   const systemInstruction = `You are a Senior Technical Recruiter and Engineering Resume ATS Evaluator.
 Your job is to evaluate engineering resumes for clarity, impact, technical depth, action verbs, bullet point quality, and ATS readability.

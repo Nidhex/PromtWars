@@ -3,19 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../../components/layout/AppShell';
 import { useProjectDiscovery } from '../../hooks/useProjectDiscovery';
 import { ProjectDomain, DifficultyLevel } from '../../types/project';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Badge } from '../../components/ui/Badge';
-import { DocumentUploader } from '../../components/upload/DocumentUploader';
 import { VoiceInputModal } from '../../components/voice/VoiceInputModal';
 import {
   Sparkles,
   Mic,
   ArrowRight,
   Check,
-  FileText,
   X,
   ChevronDown,
   ChevronUp,
@@ -76,7 +74,6 @@ export const DashboardPage: React.FC = () => {
 
   const [showAllDomains, setShowAllDomains] = useState(false);
   const [voiceModalOpen, setVoiceModalOpen] = useState(false);
-  const [showResumeUpload, setShowResumeUpload] = useState(false);
 
   const displayedDomains = showAllDomains ? ALL_DOMAINS : ALL_DOMAINS.slice(0, POPULAR_DOMAINS_COUNT);
 
@@ -405,49 +402,7 @@ export const DashboardPage: React.FC = () => {
         </section>
 
         {/* ==================================================
-            SECTION 5: RESUME / PROFILE CONTEXT (OPTIONAL)
-            ================================================== */}
-        <section className="space-y-3">
-          <Card className="bg-surface-900 border border-surface-700/60">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <CardTitle className="text-base font-bold text-slate-100 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-brand-400" />
-                  <span>Give your AI more context (Optional)</span>
-                </CardTitle>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Upload your resume or project report so recommendations match your existing skills and experience.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowResumeUpload((prev) => !prev)}
-                >
-                  {showResumeUpload ? 'Close Uploader' : 'Upload Resume / Document'}
-                </Button>
-              </div>
-            </CardHeader>
-
-            {showResumeUpload && (
-              <CardContent className="pt-2 border-t border-surface-700/40 space-y-3">
-                <DocumentUploader
-                  onDocumentUploaded={(doc) => {
-                    updateInput({
-                      resumeUploadedDocId: doc.id,
-                      resumeFileName: doc.fileName,
-                    });
-                  }}
-                />
-              </CardContent>
-            )}
-          </Card>
-        </section>
-
-        {/* ==================================================
-            SECTION 6: GENERATION SUMMARY ("YOUR PROJECT BRIEF")
+            SECTION 5: GENERATION SUMMARY ("YOUR PROJECT BRIEF")
             ================================================== */}
         <section className="p-5 rounded-2xl bg-surface-950/80 border border-brand-500/30 space-y-3">
           <div className="flex items-center justify-between">
@@ -460,7 +415,7 @@ export const DashboardPage: React.FC = () => {
             <span className="text-[11px] font-mono text-slate-400">Updates live from form inputs</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div className="p-2.5 rounded-lg bg-surface-900 border border-surface-700/40">
               <span className="text-[10px] font-mono text-slate-400 block mb-0.5">Target Domains:</span>
               <p className="font-semibold text-slate-100 truncate">
@@ -479,13 +434,6 @@ export const DashboardPage: React.FC = () => {
               <span className="text-[10px] font-mono text-slate-400 block mb-0.5">Hardware & Stack:</span>
               <p className="font-semibold text-slate-100 truncate">
                 {input.resources.length > 0 ? input.resources.join(', ') : 'Standard'}
-              </p>
-            </div>
-
-            <div className="p-2.5 rounded-lg bg-surface-900 border border-surface-700/40">
-              <span className="text-[10px] font-mono text-slate-400 block mb-0.5">Resume Context:</span>
-              <p className="font-semibold text-emerald-400 truncate">
-                {input.resumeFileName ? `Attached (${input.resumeFileName})` : 'Not added (Optional)'}
               </p>
             </div>
           </div>
